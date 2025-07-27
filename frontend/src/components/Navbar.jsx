@@ -1,208 +1,217 @@
-import React, { useState } from "react";
-import { Link } from "react-scroll";
-import { BiRestaurant } from "react-icons/bi";
-import { AiOutlineMenuUnfold, AiOutlineClose } from "react-icons/ai";
-import { BiChevronDown } from "react-icons/bi";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../store/slices/authSlice";
+import { clearCart } from "../store/slices/cartSlice";
+import {
+  FaShoppingCart,
+  FaUser,
+  FaSignOutAlt,
+  FaBars,
+  FaTimes,
+} from "react-icons/fa";
 
 const Navbar = () => {
-  const [menu, setMenu] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [isLogin, setIsLogin] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { itemCount } = useSelector((state) => state.cart);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const handleChange = () => {
-    setMenu(!menu);
+  const handleLogout = () => {
+    dispatch(logout());
+    dispatch(clearCart());
+    navigate("/");
+    setIsMenuOpen(false);
   };
 
-  const closeMenu = () => {
-    setMenu(false);
+  const getDashboardLink = () => {
+    if (!user) return null;
+    switch (user.role) {
+      case "admin":
+        return "/admin/dashboard";
+      case "restaurant_owner":
+        return "/restaurant/dashboard";
+      case "delivery_partner":
+        return "/delivery/dashboard";
+      default:
+        return null;
+    }
   };
 
   return (
-    <div className="fixed w-full z-50">
-      <div>
-        <div className="flex flex-row justify-between p-5 md:px-32 px-5 bg-white shadow-[0_3px_10px_rgb(0,0,0,0.2)]">
-          <div className="flex flex-row items-center cursor-pointer">
-            <BiRestaurant size={32} />
-            <h1 className="text-xl font-semibold">Restoooo</h1>
+    <nav className="bg-white shadow-lg sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          {/* Logo */}
+          <div className="flex items-center">
+            <Link to="/" className="flex-shrink-0 flex items-center">
+              <span className="text-2xl font-bold text-orange-600">Restoo</span>
+            </Link>
           </div>
 
-          <nav className="hidden md:flex flex-row items-center text-lg font-medium gap-8">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
             <Link
-              to="home"
-              spy
-              smooth
-              duration={500}
-              className="hover:text-brightColor cursor-pointer"
+              to="/restaurants"
+              className="text-gray-700 hover:text-orange-600 transition-colors"
             >
-              Home
+              Restaurants
             </Link>
 
-            <div className="relative group">
-              <div className="flex items-center gap-1">
+            {isAuthenticated && (
+              <>
                 <Link
-                  to="dishes"
-                  spy
-                  smooth
-                  duration={500}
-                  className="hover:text-brightColor cursor-pointer"
+                  to="/orders"
+                  className="text-gray-700 hover:text-orange-600 transition-colors"
                 >
-                  Dishes
+                  Orders
                 </Link>
-                <BiChevronDown size={25} />
+                <Link
+                  to="/profile"
+                  className="text-gray-700 hover:text-orange-600 transition-colors"
+                >
+                  Profile
+                </Link>
+                {getDashboardLink() && (
+                  <Link
+                    to={getDashboardLink()}
+                    className="text-gray-700 hover:text-orange-600 transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Right side - Cart and Auth */}
+          <div className="flex items-center space-x-4">
+            {/* Cart */}
+            <Link
+              to="/cart"
+              className="relative p-2 text-gray-700 hover:text-orange-600 transition-colors"
+            >
+              <FaShoppingCart className="h-6 w-6" />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-orange-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
+
+            {/* Auth */}
+            {isAuthenticated ? (
+              <div className="hidden md:flex items-center space-x-4">
+                <span className="text-gray-700">Welcome, {user?.name}</span>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-2 text-gray-700 hover:text-orange-600 transition-colors"
+                >
+                  <FaSignOutAlt />
+                  <span>Logout</span>
+                </button>
               </div>
-
-              <ul className="absolute hidden space-y-2 group-hover:block bg-white border border-gray-300 rounded-lg p-5 z-40">
-                {["Spicy", "Tasty", "Delicious", "Crispy"].map((item) => (
-                  <li key={item}>
-                    <Link
-                      to="dishes"
-                      spy
-                      smooth
-                      duration={500}
-                      className="text-gray-800 hover:text-brightColor"
-                    >
-                      {item}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <Link
-              to="about"
-              spy
-              smooth
-              duration={500}
-              className="hover:text-brightColor cursor-pointer"
-            >
-              About
-            </Link>
-
-            <Link
-              to="menu"
-              spy
-              smooth
-              duration={500}
-              className="hover:text-brightColor cursor-pointer"
-            >
-              Menu
-            </Link>
-
-            <Link
-              to="review"
-              spy
-              smooth
-              duration={500}
-              className="hover:text-brightColor cursor-pointer"
-            >
-              Reviews
-            </Link>
-
-            <button
-              onClick={() => setShowModal(true)}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white hover:opacity-90"
-            >
-              Login
-            </button>
-          </nav>
-
-          <div className="md:hidden flex items-center">
-            {menu ? (
-              <AiOutlineClose size={25} onClick={handleChange} />
             ) : (
-              <AiOutlineMenuUnfold size={25} onClick={handleChange} />
+              <div className="hidden md:flex items-center space-x-4">
+                <Link
+                  to="/login"
+                  className="text-gray-700 hover:text-orange-600 transition-colors"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
+
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 text-gray-700 hover:text-orange-600 transition-colors"
+            >
+              {isMenuOpen ? (
+                <FaTimes className="h-6 w-6" />
+              ) : (
+                <FaBars className="h-6 w-6" />
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile menu */}
+      {isMenuOpen && (
+        <div className="md:hidden bg-white border-t">
+          <div className="px-2 pt-2 pb-3 space-y-1">
+            <Link
+              to="/restaurants"
+              className="block px-3 py-2 text-gray-700 hover:text-orange-600 transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Restaurants
+            </Link>
+
+            {isAuthenticated && (
+              <>
+                <Link
+                  to="/orders"
+                  className="block px-3 py-2 text-gray-700 hover:text-orange-600 transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Orders
+                </Link>
+                <Link
+                  to="/profile"
+                  className="block px-3 py-2 text-gray-700 hover:text-orange-600 transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Profile
+                </Link>
+                {getDashboardLink() && (
+                  <Link
+                    to={getDashboardLink()}
+                    className="block px-3 py-2 text-gray-700 hover:text-orange-600 transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                )}
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-3 py-2 text-gray-700 hover:text-orange-600 transition-colors"
+                >
+                  Logout
+                </button>
+              </>
+            )}
+
+            {!isAuthenticated && (
+              <>
+                <Link
+                  to="/login"
+                  className="block px-3 py-2 text-gray-700 hover:text-orange-600 transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="block px-3 py-2 text-gray-700 hover:text-orange-600 transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Sign Up
+                </Link>
+              </>
             )}
           </div>
         </div>
-
-        {/* Mobile Nav */}
-        <div
-          className={`${
-            menu ? "translate-x-0" : "-translate-x-full"
-          } lg:hidden flex flex-col absolute bg-black text-white left-0 top-20 font-semibold text-2xl text-center pt-8 pb-4 gap-8 w-full h-fit transition-transform duration-300`}
-        >
-          {["home", "dishes", "about", "menu", "review"].map((item) => (
-            <Link
-              key={item}
-              to={item}
-              spy
-              smooth
-              duration={500}
-              className="hover:text-brightColor cursor-pointer"
-              onClick={closeMenu}
-            >
-              {item.charAt(0).toUpperCase() + item.slice(1)}
-            </Link>
-          ))}
-
-          <button
-            onClick={() => {
-              setShowModal(true);
-              closeMenu();
-            }}
-            className="mx-auto px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-600 text-white hover:opacity-90"
-          >
-            Login
-          </button>
-        </div>
-
-        {/* Login/Register Modal */}
-        {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-            <div className="bg-white w-[90%] md:w-[400px] rounded-2xl p-6 shadow-lg relative">
-              <button
-                onClick={() => setShowModal(false)}
-                className="absolute top-4 right-4 text-gray-700 hover:text-red-500"
-              >
-                <AiOutlineClose size={22} />
-              </button>
-
-              <h2 className="text-2xl font-bold mb-6 text-center text-transparent bg-gradient-to-r from-cyan-500 to-purple-600 bg-clip-text">
-                {isLogin ? "Login to Restoooo" : "Register for Restoooo"}
-              </h2>
-
-              <form className="flex flex-col gap-4">
-                {!isLogin && (
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    className="p-3 rounded-lg bg-gray-100 outline-none text-sm"
-                  />
-                )}
-                <input
-                  type="email"
-                  placeholder="Email"
-                  className="p-3 rounded-lg bg-gray-100 outline-none text-sm"
-                />
-                <input
-                  type="password"
-                  placeholder="Password"
-                  className="p-3 rounded-lg bg-gray-100 outline-none text-sm"
-                />
-                <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 text-white py-2 rounded-lg font-semibold hover:opacity-90"
-                >
-                  {isLogin ? "Login" : "Register"}
-                </button>
-              </form>
-
-              <p className="text-sm text-center text-gray-600 mt-4">
-                {isLogin
-                  ? "Don't have an account?"
-                  : "Already have an account?"}{" "}
-                <span
-                  className="text-brightColor font-medium cursor-pointer"
-                  onClick={() => setIsLogin(!isLogin)}
-                >
-                  {isLogin ? "Register" : "Login"}
-                </span>
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+      )}
+    </nav>
   );
 };
 

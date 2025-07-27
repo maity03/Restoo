@@ -1,27 +1,64 @@
 import React from "react";
-import img1 from "../assets/img/img1.jpg";
-import img2 from "../assets/img/img2.jpg";
-import img3 from "../assets/img/img3.jpg";
-import img4 from "../assets/img/img4.jpg";
-import img5 from "../assets/img/img5.jpg";
-import img6 from "../assets/img/img6.jpg";
+import { useDispatch } from "react-redux";
+import { addToCart } from "../store/slices/cartSlice";
 import DishesCard from "../layouts/DishesCard";
 
-const Dishes = () => {
-  return (
-    <div className=" min-h-screen flex flex-col justify-center items-center lg:px-32 px-5">
-      <h1 className=" text-4xl font-semibold text-center pt-24 pb-10">
-        Our Dishes
-      </h1>
+const Dishes = ({ dishes = [], restaurantId }) => {
+  const dispatch = useDispatch();
 
-      <div className=" flex flex-wrap gap-8 justify-center">
-        <DishesCard img={img1} title="Tasty Dish" price="350 INR" />
-        <DishesCard img={img2} title="Tasty Dish" price="400 INR" />
-        <DishesCard img={img3} title="Tasty Dish" price="500 INR" />
-        <DishesCard img={img4} title="Tasty Dish" price="300 INR" />
-        <DishesCard img={img5} title="Tasty Dish" price="250 INR" />
-        <DishesCard img={img6} title="Tasty Dish" price="290 INR" />
+  const handleAddToCart = (dish) => {
+    dispatch(
+      addToCart({
+        ...dish,
+        restaurantId,
+        quantity: 1,
+      })
+    );
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount);
+  };
+
+  if (dishes.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg
+            className="w-8 h-8 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+            />
+          </svg>
+        </div>
+        <p className="text-gray-600">No dishes available</p>
+        <p className="text-gray-500 text-sm">
+          Check back later for new menu items
+        </p>
       </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {dishes.map((dish) => (
+        <DishesCard
+          key={dish._id}
+          dish={dish}
+          onAddToCart={() => handleAddToCart(dish)}
+          formatCurrency={formatCurrency}
+        />
+      ))}
     </div>
   );
 };
